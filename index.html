@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Romaria Santo André → Aparecida — Mapa + Tempo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#222}
+header{background:#7b1e1e;color:#fff;padding:16px}
+header h1{margin:0 0 5px;font-size:21px} header p{margin:0;font-size:13px;opacity:.9}
+.wrap{max-width:1150px;margin:auto;padding:12px}
+.mainTabs{display:flex;gap:7px;overflow:auto;margin-bottom:10px}
+.mainTab{border:0;border-radius:10px;padding:11px 15px;background:#ddd;font-weight:bold;white-space:nowrap}
+.mainTab.active{background:#7b1e1e;color:white}
+.dayTabs{display:flex;gap:6px;overflow:auto;margin-bottom:10px}
+.dayTab{border:0;border-radius:9px;padding:9px 12px;background:#e1e4e8;font-weight:bold;white-space:nowrap}
+.dayTab.active{background:#174a7e;color:#fff}
+.section{display:none} .section.active{display:block}
+.panel{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px #0001;margin-bottom:10px}
+#map{height:62vh;min-height:450px;border-radius:14px;box-shadow:0 2px 10px #0002}
+.legend{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.leg{padding:7px 10px;border-radius:8px;font-size:12px;font-weight:bold;color:white}
+.d1{background:#d32f2f} .d2{background:#1976d2} .d3{background:#388e3c} .d4{background:#f57c00} .d5{background:#7b1fa2}
+.loc{background:#1565c0;color:white;border:0;border-radius:9px;padding:10px 12px;font-weight:bold}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{padding:10px;border-radius:10px;background:#f7f7f7} .stat b{display:block;font-size:17px} .stat small{color:#666}
+table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:9px 7px;border-bottom:1px solid #eee;text-align:left} th{background:#f1f4f7}
+.alert{padding:11px;border-radius:10px;background:#fff3cd;font-size:12px;line-height:1.45;margin-top:10px}
+.point{padding:9px 0;border-bottom:1px solid #eee;display:flex;gap:9px;align-items:center}
+.num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:bold;flex:none}
+.point a,.navBtn{margin-left:auto;text-decoration:none;background:#eee;padding:7px 9px;border-radius:8px;font-size:12px;color:#222;font-weight:bold;border:0}
+.note{font-size:12px;color:#666;line-height:1.5}
+.bigStatus{font-size:18px;font-weight:bold;margin-bottom:5px}
+.cardRow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.dayCard{border:1px solid #eee;border-radius:10px;padding:10px}
+.dayCard b{display:block} .dayCard small{color:#666}
+@media(max-width:700px){.grid{grid-template-columns:1fr 1fr}.cardRow{grid-template-columns:1fr 1fr}#map{height:57vh}table{font-size:12px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>🗺️🌦️ ROMARIA — SANTO ANDRÉ → APARECIDA</h1>
+<p>Mapa da rota + previsão do tempo em um único site</p>
+</div></header>
+<div class="wrap">
+<div class="mainTabs">
+<button class="mainTab active" onclick="openSection('mapSection',this)">🗺️ Mapa Geral</button>
+<button class="mainTab" onclick="openSection('weatherSection',this)">🌦️ Tempo por dia</button>
+<button class="mainTab" onclick="openSection('overviewSection',this)">📊 Visão Integrada</button>
+</div>
+<section id="mapSection" class="section active">
+<div class="panel">
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><strong>Rota completa — 5 dias</strong><button class="loc" onclick="locateMe()">📍 Minha localização</button></div>
+<div class="legend"><span class="leg d1">DIA 1 — Santo André → Arujá</span><span class="leg d2">DIA 2 — Arujá → Jacareí</span><span class="leg d3">DIA 3 — Jacareí → Caçapava</span><span class="leg d4">DIA 4 — Caçapava → Pindamonhangaba</span><span class="leg d5">DIA 5 — Pindamonhangaba → Aparecida</span></div>
+<div id="map"></div>
+</div>
+<div class="panel"><h3 style="margin-top:0">📌 Pontos da romaria</h3><div id="points"></div></div>
+</section>
+<section id="weatherSection" class="section">
+<div class="panel"><div class="dayTabs" id="weatherTabs"></div><div class="bigStatus" id="weatherTitle"></div><div id="weatherStats" class="grid"></div><div class="alert" id="weatherNote"></div></div>
+<div class="panel"><h3 style="margin-top:0">⏱️ Condições das 06h às 20h</h3><table><thead><tr><th>Hora</th><th>Temperatura</th><th>Chuva</th><th>Condição</th><th>Risco</th></tr></thead><tbody id="weatherHours"></tbody></table></div>
+<div class="panel"><h3 style="margin-top:0">🎒 Recomendação para o dia</h3><div id="weatherTip"></div><p class="note">⚠️ A previsão é consultada automaticamente pela internet ao abrir o site. Recarregue para forçar nova atualização e confira novamente antes das 06h.</p></div>
+</section>
+<section id="overviewSection" class="section">
+<div class="panel"><h2 style="margin-top:0">📊 Rota + clima em uma visão</h2><div class="cardRow" id="overview"></div></div>
+<div class="panel"><h3 style="margin-top:0">Como usar</h3><ul><li><b>Mapa Geral:</b> acompanhe os pontos e abra a navegação.</li><li><b>Tempo por dia:</b> veja temperatura, chuva e risco por horário.</li><li><b>Visão Integrada:</b> compare os cinco dias antes de sair.</li></ul><p class="note">A previsão meteorológica é atualizada pela internet sempre que a página é aberta.</p></div>
+</section>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="route.js"></script>
+<script src="app.js"></script>
+</body></html>
